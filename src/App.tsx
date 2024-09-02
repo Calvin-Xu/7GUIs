@@ -7,7 +7,7 @@ import { observer } from 'mobx-react'
 import TemperatureConverter from './components/guis/temperatureConverter'
 
 class GuiStore {
-  guis: { [key: string]: { component: JSX.Element, description: string, isVisible: boolean, windowStore: WindowStore } }
+  guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
 
   constructor() {
     makeAutoObservable(this)
@@ -15,12 +15,14 @@ class GuiStore {
       "Counter": {
         component: <Counter />,
         description: "Click button and number goes up",
+        challenges: "basic ideas of language/toolkit",
         isVisible: true,
         windowStore: new WindowStore()
       },
       "TemperatureConverter": {
         component: <TemperatureConverter />,
-        description: "Celsius to Fahrenheit",
+        description: "Celsius to Fahrenheit, and the other way around",
+        challenges: "bidirectional data flow, user-provided text input",
         isVisible: true,
         windowStore: new WindowStore()
       }
@@ -40,15 +42,22 @@ const App: React.FC = observer(() => {
   return (
     <div className="App">
       <h1>7GUIs with React + MobX + Typescript</h1>
-      <p>Implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a>; source at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a></p>
+      <p>Implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a></p>
       <br />
       <div className="App-guis">
         {Object.entries(guiStore.guis).map(([name, gui]) => {
           if (gui.isVisible) {
             return (
-              <Window key={name} title={name} resizable={true} onClose={() => guiStore.toggleVisibility(name)} windowStore={gui.windowStore}>
-                {gui.component}
-              </Window>
+              <div key={name}>
+                <div>
+                  <Window title={name} resizable={true} onClose={() => guiStore.toggleVisibility(name)} windowStore={gui.windowStore}>
+                    {gui.component}
+                  </Window>
+                </div>
+                <br />
+                <p className='App-desc'>{gui.description}</p>
+                <span className='App-desc'><b>Challenges:</b> <span>{gui.challenges}</span></span>
+              </div>
             )
           }
           return null

@@ -5,6 +5,7 @@
 .App-guis {
   display: flex;
   flex-direction: column;
+  gap: 40px;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 1vmin);
@@ -13,4 +14,11 @@
 
 .App-link {
   color: #61dafb;
+}
+
+.App-desc {
+  font-size: 0.8em;
+  text-align: left;
+  display: block;
+  margin: 0.5em;
 }

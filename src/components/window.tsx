@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect, useRef } from 'react'
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
 import { observer } from 'mobx-react'
 import { autorun, makeAutoObservable } from 'mobx'
 
@@ -79,8 +79,54 @@ class WindowStore {
 interface WindowProps extends PropsWithChildren {
     title?: string,
     resizable?: boolean
-    onClose?: () => void
+    onClose: () => void
     windowStore: WindowStore
+}
+
+interface CloseButtonProps {
+    onClick: () => void
+    size: number
+}
+
+const CloseButton: React.FC<CloseButtonProps> = ({ onClick, size }) => {
+    const [hover, setHover] = useState(false)
+
+    const style = {
+        width: size,
+        height: size,
+        backgroundColor: '#ec6a5e',
+        borderRadius: '50%',
+        border: 'none',
+        position: 'absolute' as const,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        left: size,
+    }
+
+    const crossStyle = {
+        position: 'absolute' as const,
+        height: size / 6,
+        width: '100%',
+        backgroundColor: '#6b120b',
+        transformOrigin: 'center',
+    }
+
+    return (
+        <button
+            style={style}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            onClick={onClick}
+        >
+            {hover && (
+                <>
+                    <div style={{ ...crossStyle, transform: 'rotate(45deg) scale(0.7)' }}></div>
+                    <div style={{ ...crossStyle, transform: 'rotate(-45deg) scale(0.7)' }}></div>
+                </>
+            )}
+        </button>
+    )
 }
 
 const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
@@ -166,23 +212,21 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
             width: 'calc(100% - 20px)',
             height: `calc(100% - ${titleBarHeight + 20}px)`,
         },
-        closeButton: {
-            width: titleBarHeight / 2,
-            height: titleBarHeight / 2,
-            backgroundColor: '#ec6a5e',
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            order: '-1',
-            left: titleBarHeight / 2,
-            position: 'absolute' as const,
-        }
+        // closeButton: {
+        //     width: titleBarHeight / 2,
+        //     height: titleBarHeight / 2,
+        //     backgroundColor: '#ec6a5e',
+        //     borderRadius: '50%',
+        //     border: 'none',
+        //     left: titleBarHeight / 2,
+        //     position: 'absolute' as const,
+        // }
     }
 
     return (
-        <div ref={windowRef} style={windowStyles.windowContainer}>
+        <div ref={windowRef} style={windowStyles.windowContainer} >
             <div style={windowStyles.titleBar}>
-                <button style={windowStyles.closeButton} onClick={props.onClose}></button>
+                <CloseButton size={titleBarHeight / 2} onClick={props.onClose} />
                 <span>{props.title}</span>
             </div>
             <div style={windowStyles.contentPane}>
@@ -195,8 +239,9 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
                     <div style={resizeHandleStyle('top-right')} onMouseDown={(e) => handleMouseDown(e, 'top-right')}></div>
                     <div style={resizeHandleStyle('bottom-left')} onMouseDown={(e) => handleMouseDown(e, 'bottom-left')}></div>
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     )
 })
 
