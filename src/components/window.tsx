@@ -76,16 +76,17 @@ class WindowStore {
     }
 }
 
-const windowStore = new WindowStore()
-
 interface WindowProps extends PropsWithChildren {
     title?: string,
     resizable?: boolean
     onClose?: () => void
+    windowStore: WindowStore
 }
 
 const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
     const windowRef = useRef<HTMLDivElement>(null)
+
+    const windowStore = props.windowStore
 
     useEffect(() => {
         if (windowRef.current && !windowStore.width && !windowStore.height) {
@@ -200,3 +201,4 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
 })
 
 export default Window
+export { WindowStore }
