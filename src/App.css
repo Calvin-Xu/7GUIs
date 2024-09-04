@@ -1,24 +1,35 @@
 .App {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
 .App-guis {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 40px;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 1vmin);
-  color: rgb(0, 0, 0);
 }
 
 .App-link {
   color: #61dafb;
 }
 
-.App-desc {
-  font-size: 0.8em;
+.App-desc-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   text-align: left;
-  display: block;
-  margin: 0.5em;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.App-desc {
+  font-size: 1em;
+  margin: 0.5em 0;
+  width: 100%;
+  align-self: center;
 }

@@ -1,15 +1,12 @@
 import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
-import { autorun, makeAutoObservable } from "mobx"
+import { makeAutoObservable } from "mobx"
 
 class TemperatureConverterStore {
     celsius: number = NaN
     fahrenheit: number = NaN
     constructor() {
         makeAutoObservable(this)
-        // autorun(() => {
-        //     console.log(this.celsius, this.fahrenheit)
-        // })
     }
 
     onChangeCelsius = (e: React.ChangeEvent<HTMLInputElement>) => {

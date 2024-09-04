@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
 import { observer } from 'mobx-react'
-import { autorun, makeAutoObservable } from 'mobx'
+import { makeAutoObservable } from 'mobx'
 
 class WindowStore {
     width?: number
@@ -14,9 +14,6 @@ class WindowStore {
 
     constructor() {
         makeAutoObservable(this)
-        // autorun(() => {
-        //     console.log(this.width, this.height)
-        // })
     }
 
     setSize(width: number, height: number) {
@@ -221,6 +218,7 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
         //     left: titleBarHeight / 2,
         //     position: 'absolute' as const,
         // }
+        //  could have not used a component if supported :hover
     }
 
     return (

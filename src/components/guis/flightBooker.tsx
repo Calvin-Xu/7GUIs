@@ -1,6 +1,6 @@
 import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
-import { autorun, observable, computed, makeObservable } from "mobx"
+import { observable, computed, makeObservable } from "mobx"
 
 const getDateTimeString = (date: Date) => {
     return date.toISOString().split('T')[0]
@@ -14,9 +14,6 @@ class FlightBookerStore {
     startDateString = getDateTimeString(new Date())
     endDateString = this.startDateString
 
-    lastValidStart = new Date()
-    lastValidEnd = new Date()
-
     constructor() {
         makeObservable(this, {
             bookingType: observable,
@@ -28,6 +25,9 @@ class FlightBookerStore {
             endDateValid: computed,
         })
     }
+
+    lastValidStart = new Date()
+    lastValidEnd = new Date()
 
     get startDate() {
         const date = new Date(this.startDateString)
@@ -62,18 +62,18 @@ class FlightBookerStore {
 
 const flightBooker = new FlightBookerStore()
 
-const handleBook = () => {
-    switch (flightBooker.bookingType) {
-        case "one-way":
-            return alert("You have booked a one-way flight on " + getDateTimeString(flightBooker.startDate))
-        case "return":
-            return alert("You have booked flights departing " + getDateTimeString(flightBooker.startDate) + " and returning " + getDateTimeString(flightBooker.endDate))
-        default:
-            return alert("Unexpected booking type")
-    }
-}
-
 const FlightBooker = observer(() => {
+    const handleBook = () => {
+        switch (flightBooker.bookingType) {
+            case "one-way":
+                return alert("You have booked a one-way flight on " + getDateTimeString(flightBooker.startDate))
+            case "return":
+                return alert("You have booked flights departing " + getDateTimeString(flightBooker.startDate) + " and returning " + getDateTimeString(flightBooker.endDate))
+            default:
+                return alert("Unexpected booking type")
+        }
+    }
+
     return <FlexBox flexDirection="column" gap={10}>
         <select value={flightBooker.bookingType} onChange={e => flightBooker.bookingType = e.target.value as "one-way" | "return"}>
             <option value="one-way">one-way flight</option>
