@@ -18,7 +18,7 @@ class TimerStore {
         })
 
         this.interval = setInterval(action(() => {
-            this.elapsed = Math.min(this.elapsed + 100, this.duration)
+            this.elapsed = Math.min(this.elapsed + 100, MAX)
         }), 100)
     }
 
