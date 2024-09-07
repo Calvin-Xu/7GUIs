@@ -12,7 +12,10 @@ const FlexBox: React.FC<FlexBoxProps> = (props: FlexBoxProps) => {
         ...props,
         display: 'flex',
         justifyContent: 'space-evenly',
+        alignItems: 'center',
         boxSizing: 'border-box',
+        width: '100%',
+        height: '100%',
     }
     return <div style={style}>{props.children}</div>
 }

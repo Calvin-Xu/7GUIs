@@ -6,6 +6,7 @@ import { makeAutoObservable } from 'mobx'
 import { observer } from 'mobx-react'
 import TemperatureConverter from './components/guis/temperatureConverter'
 import FlightBooker from './components/guis/flightBooker'
+import Timer from './components/guis/timer'
 
 class GuiStore {
   guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
@@ -33,6 +34,13 @@ class GuiStore {
         challenges: "constraints",
         isVisible: true,
         windowStore: new WindowStore()
+      },
+      "Timer": {
+        component: <Timer />,
+        description: "Timer with a duration slider to play with",
+        challenges: "concurrency, competing user/signal interactions, responsiveness.",
+        isVisible: true,
+        windowStore: new WindowStore()
       }
     }
   }
@@ -50,7 +58,7 @@ const App: React.FC = observer(() => {
   return (
     <div className="App">
       <h1>7GUIs with React + MobX + TypeScript</h1>
-      <p>Implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a></p>
+      <p>My implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
       <br />
       {Object.entries(guiStore.guis).map(([name, gui]) => (
         gui.isVisible && (
