@@ -42,7 +42,7 @@ const Timer = observer(() => <FlexBox flexDirection="column" gap={10}>
             style={{ position: "relative", top: "0.1em" }}
             type="range" min="0" max={MAX}
             value={timer.duration}
-            onChange={(e) => timer.duration = parseInt(e.target.value)}>
+            onChange={(e) => action(() => timer.duration = parseInt(e.target.value))()}>
         </input>
     </FlexBox>
     <button onClick={() => timer.reset()}>Reset</button>
