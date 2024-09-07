@@ -1,6 +1,6 @@
 import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
-import { makeObservable, observable } from "mobx"
+import { action, makeObservable, observable } from "mobx"
 
 const MAX = 20000 // ms
 
@@ -8,16 +8,18 @@ class TimerStore {
 
     elapsed = 0
     duration = 10000
+    interval: NodeJS.Timer
 
     constructor() {
         makeObservable(this, {
             elapsed: observable,
             duration: observable,
+            reset: action
         })
 
-        setInterval(() => {
-            this.elapsed = Math.min(this.elapsed + 100, MAX)
-        }, 100)
+        this.interval = setInterval(action(() => {
+            this.elapsed = Math.min(this.elapsed + 100, this.duration)
+        }), 100)
     }
 
     reset() {

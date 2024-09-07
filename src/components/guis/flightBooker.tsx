@@ -1,6 +1,6 @@
 import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
-import { observable, computed, makeObservable } from "mobx"
+import { observable, computed, makeObservable, action } from "mobx"
 
 const getDateTimeString = (date: Date) => {
     return date.toISOString().split('T')[0]
@@ -23,6 +23,9 @@ class FlightBookerStore {
             endDateString: observable,
             startDateValid: computed,
             endDateValid: computed,
+            setBookingType: action,
+            setStartDateString: action,
+            setEndDateString: action
         })
     }
 
@@ -58,6 +61,18 @@ class FlightBookerStore {
         const date = new Date(this.endDateString)
         return !isNaN(date.getTime()) && date >= this.startDate
     }
+
+    setBookingType(type: "one-way" | "return") {
+        this.bookingType = type
+    }
+
+    setStartDateString(date: string) {
+        this.startDateString = date
+    }
+
+    setEndDateString(date: string) {
+        this.endDateString = date
+    }
 }
 
 const flightBooker = new FlightBookerStore()
@@ -75,15 +90,15 @@ const FlightBooker = observer(() => {
     }
 
     return <FlexBox flexDirection="column" gap={10}>
-        <select value={flightBooker.bookingType} onChange={e => flightBooker.bookingType = e.target.value as "one-way" | "return"}>
+        <select value={flightBooker.bookingType} onChange={e => flightBooker.setBookingType(e.target.value as "one-way" | "return")}>
             <option value="one-way">one-way flight</option>
             <option value="return">return flight</option>
         </select>
         <input value={flightBooker.startDateString}
-            onChange={(e) => flightBooker.startDateString = e.target.value}
+            onChange={(e) => flightBooker.setStartDateString(e.target.value)}
             style={{ backgroundColor: flightBooker.startDateValid ? 'inherit' : '#ec6a5e' }}></input>
         <input value={flightBooker.endDateString}
-            onChange={(e) => flightBooker.endDateString = e.target.value}
+            onChange={(e) => flightBooker.setEndDateString(e.target.value)}
             disabled={flightBooker.bookingType === "one-way"}
             style={{ backgroundColor: flightBooker.bookingType === "one-way" || flightBooker.endDateValid ? 'inherit' : '#ec6a5e' }}></input>
         <button onClick={handleBook}
