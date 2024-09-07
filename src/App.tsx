@@ -7,6 +7,7 @@ import { observer } from 'mobx-react'
 import TemperatureConverter from './components/guis/temperatureConverter'
 import FlightBooker from './components/guis/flightBooker'
 import Timer from './components/guis/timer'
+import CRUD from './components/guis/crud'
 
 class GuiStore {
   guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
@@ -41,6 +42,13 @@ class GuiStore {
         challenges: "concurrency, competing user/signal interactions, responsiveness.",
         isVisible: true,
         windowStore: new WindowStore()
+      },
+      "CRUD": {
+        component: <CRUD />,
+        description: "A classic CRUD interface",
+        challenges: "separating the domain and presentation logic, managing mutation",
+        isVisible: true,
+        windowStore: new WindowStore()
       }
     }
   }
@@ -57,12 +65,11 @@ const guiStore = new GuiStore()
 const App: React.FC = observer(() => {
   return (
     <div className="App">
-      <h1>7GUIs with React + MobX + TypeScript</h1>
-      <p>My implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
-      <br />
+      <h1 style={{ textAlign: "center" }}>7GUIs with React + MobX + TypeScript</h1>
+      <p style={{ textAlign: "center" }}>My implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
       {Object.entries(guiStore.guis).map(([name, gui]) => (
         gui.isVisible && (
-          <div key={name}>
+          <div key={name} className="App-row">
             <div className="App-guis">
               <Window title={name} resizable={true} onClose={() => guiStore.toggleVisibility(name)} windowStore={gui.windowStore}>
                 {gui.component}
