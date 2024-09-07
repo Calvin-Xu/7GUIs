@@ -42,7 +42,7 @@ class WindowStore {
 
             switch (this.resizeCorner) {
                 case 'bottom-right':
-                    this.width += deltaX * 2
+                    this.width += deltaX * 4
                     this.height += deltaY
                     break
                 // case 'top-left':

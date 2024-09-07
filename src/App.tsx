@@ -46,7 +46,7 @@ class GuiStore {
       "CRUD": {
         component: <CRUD />,
         description: "A classic CRUD interface",
-        challenges: "separating the domain and presentation logic, managing mutation",
+        challenges: "separating the domain and presentation logic, managing mutation, sane selection focus when deleting and filtering",
         isVisible: true,
         windowStore: new WindowStore()
       }
