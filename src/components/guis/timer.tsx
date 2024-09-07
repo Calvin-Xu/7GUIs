@@ -8,7 +8,7 @@ class TimerStore {
 
     elapsed = 0
     duration = 10000
-    interval: NodeJS.Timer
+    interval?: NodeJS.Timer
 
     constructor() {
         makeObservable(this, {
@@ -17,13 +17,29 @@ class TimerStore {
             reset: action
         })
 
+        this.startTimer()
+    }
+
+    startTimer() {
+        this.stopTimer()
         this.interval = setInterval(action(() => {
-            this.elapsed = Math.min(this.elapsed + 100, MAX)
+            this.elapsed += 100
+            if (this.elapsed >= MAX) {
+                this.stopTimer()
+            }
         }), 100)
+    }
+
+    stopTimer() {
+        if (this.interval) {
+            clearInterval(this.interval)
+            this.interval = undefined
+        }
     }
 
     reset() {
         this.elapsed = 0
+        this.startTimer()
     }
 
 }
