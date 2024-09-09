@@ -95,11 +95,11 @@ const CRUD = observer(() => (
                 value={crud.prefixFilter}
                 onChange={action(e => crud.updateFilter(e.target.value))} />
         </FlexBox>
-        <FlexBox flexDirection="row" gap={10} alignItems="baseline">
-            <select style={{ flex: 1, minWidth: '14em' }}
+        <FlexBox flexDirection="row" gap={10} alignItems="flex-start">
+            <select style={{ flex: 1, minWidth: '14em', minHeight: '6em' }}
                 value={crud.selected}
                 onChange={action(e => crud.selected = parseInt(e.target.value))}
-                size={crud.filteredEntries.length + 1} // avoid diff appearance of size 1
+                size={Math.max(crud.filteredEntries.length, 2)} // avoid diff appearance of size 1
             >
                 {crud.filteredEntries.map(entry => <option key={entry.id} value={entry.id}>{entry.surname}, {entry.name}</option>)}
             </select>
