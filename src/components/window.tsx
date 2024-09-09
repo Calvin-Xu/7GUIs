@@ -208,6 +208,7 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
             padding: '10px',
             width: 'calc(100% - 20px)',
             height: `calc(100% - ${titleBarHeight + 20}px)`,
+            backgroundColor: "white"
         },
         // closeButton: {
         //     width: titleBarHeight / 2,

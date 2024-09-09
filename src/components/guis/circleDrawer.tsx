@@ -2,6 +2,7 @@ import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
 import { action, autorun, makeObservable, observable } from "mobx"
 import { useEffect, useRef, useState } from "react"
+import Window, { WindowStore } from "../window"
 
 interface Circle {
     id: number // autoincrement
@@ -99,6 +100,7 @@ const CircleDrawer = observer(() => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [showPopup, setShowPopup] = useState(false)
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
+    const windowStore = new WindowStore()
 
     useEffect(() => {
         const ctx = canvasRef.current?.getContext("2d")
@@ -184,23 +186,21 @@ const CircleDrawer = observer(() => {
                 position: 'fixed',
                 left: `${popupPosition.x}px`,
                 top: `${popupPosition.y}px`,
-                border: '1px solid #ccc',
-                borderRadius: '10px',
-                padding: '5px',
-                backgroundColor: 'white',
-                // zIndex: 9999
+                zIndex: 9999
             }}>
-                <FlexBox flexDirection="column" gap={10} alignItems="center">
-                    <label>Adjust diameter of circle at ({circleStore.selected?.x}, {circleStore.selected?.y})</label>
-                    <FlexBox flexDirection="row" gap={10} justifyContent="center">
-                        <label>{circleStore.selected?.diameter}</label>
-                        <input
-                            type="range" min="10" max="200"
-                            value={circleStore.selected?.diameter}
-                            onChange={(e) => circleStore.adjustDiameter(parseInt(e.target.value))} />
-                        <button onClick={closePopup}>Close</button>
+                <Window title={""} resizable={false} onClose={closePopup} windowStore={windowStore}>
+                    <FlexBox flexDirection="column" gap={10} alignItems="center">
+                        <label>Adjust diameter of circle at ({circleStore.selected?.x}, {circleStore.selected?.y})</label>
+                        <FlexBox flexDirection="row" gap={10} justifyContent="center">
+                            <label>{circleStore.selected?.diameter}</label>
+                            <input
+                                type="range" min="10" max="200"
+                                value={circleStore.selected?.diameter}
+                                onChange={(e) => circleStore.adjustDiameter(parseInt(e.target.value))} />
+                            <button onClick={closePopup}>Done</button>
+                        </FlexBox>
                     </FlexBox>
-                </FlexBox>
+                </Window>
             </div>
         )}
     </FlexBox>
