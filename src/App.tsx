@@ -8,6 +8,7 @@ import TemperatureConverter from './components/guis/temperatureConverter'
 import FlightBooker from './components/guis/flightBooker'
 import Timer from './components/guis/timer'
 import CRUD from './components/guis/crud'
+import CircleDrawer from './components/guis/circleDrawer'
 
 class GuiStore {
   guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
@@ -45,8 +46,15 @@ class GuiStore {
       },
       "CRUD": {
         component: <CRUD />,
-        description: "A classic CRUD interface",
+        description: "A classic but satisfying CRUD interface",
         challenges: "separating the domain and presentation logic, managing mutation, sane selection focus when deleting and filtering",
+        isVisible: true,
+        windowStore: new WindowStore()
+      },
+      "Circle Drawer": {
+        component: <CircleDrawer />,
+        description: "Draw circles by clicking around; right click to adjust diameter",
+        challenges: "undo/redo, custom drawing (canvas), dialog control",
         isVisible: true,
         windowStore: new WindowStore()
       }

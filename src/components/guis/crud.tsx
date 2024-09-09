@@ -10,7 +10,7 @@ interface entry {
 
 class CRUDStore {
 
-    highestId: number = 0
+    highestId: number = 0 // autoincrement
     prefixFilter: string = ''
     name: string = ''
     surname: string = ''
