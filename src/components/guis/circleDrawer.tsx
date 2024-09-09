@@ -93,6 +93,8 @@ class CircleStore {
 
 const circleStore = new CircleStore()
 
+const SELECTED_COLOR = "rgba(186, 214, 251, 0.75)"
+
 const CircleDrawer = observer(() => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [showPopup, setShowPopup] = useState(false)
@@ -113,7 +115,7 @@ const CircleDrawer = observer(() => {
         circleStore.circles.forEach(circle => {
             ctx.beginPath()
             ctx.arc(circle.x * SCALE, circle.y * SCALE, circle.diameter / 2 * SCALE, 0, 2 * Math.PI)
-            ctx.fillStyle = (circleStore.selected?.id === circle.id) ? '#e9f0fd' : 'rgba(0,0,0,0)'
+            ctx.fillStyle = (circleStore.selected?.id === circle.id) ? SELECTED_COLOR : 'rgba(0,0,0,0)'
             ctx.fill()
             ctx.stroke()
         })
@@ -128,10 +130,10 @@ const CircleDrawer = observer(() => {
 
     const onCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const { x, y } = getCursorPoint(e)
-        circleStore.addCircle(x, y)
         if (showPopup) {
             closePopup()
         }
+        circleStore.addCircle(x, y)
         circleStore.selectCircleNear(x, y)
     }
 

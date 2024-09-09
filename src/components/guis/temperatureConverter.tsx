@@ -22,12 +22,18 @@ class TemperatureConverterStore {
 
 const converter = new TemperatureConverterStore()
 
+const round = (n: number) => Math.round(n * 100) / 100
+
 const TemperatureConverter = observer(() =>
     <FlexBox flexDirection="row" gap={10}>
-        <input type="number" value={Number.isNaN(converter.celsius) ? "" : converter.celsius.toString()} onChange={converter.onChangeCelsius}></input>
+        <input type="number"
+            value={Number.isNaN(converter.celsius) ? "" : round(converter.celsius).toString()}
+            onChange={converter.onChangeCelsius}></input>
         <span>°C</span>
         <span>=</span>
-        <input type="number" value={Number.isNaN(converter.fahrenheit) ? "" : converter.fahrenheit.toString()} onChange={converter.onChangeFahrenheit}></input>
+        <input type="number"
+            value={Number.isNaN(converter.fahrenheit) ? "" : round(converter.fahrenheit).toString()}
+            onChange={converter.onChangeFahrenheit}></input>
         <span>°F</span>
     </FlexBox>
 )

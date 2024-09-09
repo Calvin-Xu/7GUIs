@@ -4,6 +4,7 @@
   width: 100%;
   align-items: center;
   justify-content: center;
+  min-width: 500px;
 }
 
 .App-row {

@@ -77,6 +77,8 @@ class FlightBookerStore {
 
 const flightBooker = new FlightBookerStore()
 
+const INVALID_INPUT_COLOR = "#f1a54f"
+
 const FlightBooker = observer(() => {
     const handleBook = () => {
         switch (flightBooker.bookingType) {
@@ -96,11 +98,11 @@ const FlightBooker = observer(() => {
         </select>
         <input value={flightBooker.startDateString}
             onChange={(e) => flightBooker.setStartDateString(e.target.value)}
-            style={{ backgroundColor: flightBooker.startDateValid ? 'inherit' : '#ec6a5e' }}></input>
+            style={{ backgroundColor: flightBooker.startDateValid ? 'inherit' : INVALID_INPUT_COLOR }}></input>
         <input value={flightBooker.endDateString}
             onChange={(e) => flightBooker.setEndDateString(e.target.value)}
             disabled={flightBooker.bookingType === "one-way"}
-            style={{ backgroundColor: flightBooker.bookingType === "one-way" || flightBooker.endDateValid ? 'inherit' : '#ec6a5e' }}></input>
+            style={{ backgroundColor: flightBooker.bookingType === "one-way" || flightBooker.endDateValid ? 'inherit' : INVALID_INPUT_COLOR }}></input>
         <button onClick={handleBook}
             disabled={flightBooker.bookingType === "one-way"
                 ? !flightBooker.startDateValid
