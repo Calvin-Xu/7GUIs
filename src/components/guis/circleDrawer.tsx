@@ -37,7 +37,8 @@ class CircleStore {
             adjustDiameter: action,
             pushNewState: action,
             undo: action,
-            redo: action
+            redo: action,
+            popUndo: action
         })
     }
 
@@ -90,6 +91,12 @@ class CircleStore {
             }
         }
     }
+
+    popUndo() {
+        if (this.undoStack.length > 0) {
+            this.undoStack.pop()
+        }
+    }
 }
 
 const circleStore = new CircleStore()
@@ -100,6 +107,7 @@ const CircleDrawer = observer(() => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [showPopup, setShowPopup] = useState(false)
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
+    const [oldDiameter, setOldDiameter] = useState(0)
     const windowStore = new WindowStore()
 
     useEffect(() => {
@@ -164,11 +172,18 @@ const CircleDrawer = observer(() => {
             y: (canvasRect.top + selectedCircle.y + selectedCircle.diameter / 2 / 1.4)
         })
         circleStore.pushNewState()
+        setOldDiameter(selectedCircle.diameter)
         setShowPopup(true)
     }
 
     const closePopup = () => {
         setShowPopup(false)
+        // ergonomics
+        // if user did not change diameter, should not be added to undo stack
+        console.log(oldDiameter, circleStore.selected?.diameter)
+        if (oldDiameter === circleStore.selected?.diameter) {
+            circleStore.popUndo()
+        }
     }
 
     return <FlexBox flexDirection="column" gap={10}>
