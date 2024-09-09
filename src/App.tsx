@@ -9,6 +9,7 @@ import FlightBooker from './components/guis/flightBooker'
 import Timer from './components/guis/timer'
 import CRUD from './components/guis/crud'
 import CircleDrawer from './components/guis/circleDrawer'
+import Spreadsheet from './components/guis/spreadsheet'
 
 class GuiStore {
   guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
@@ -55,6 +56,13 @@ class GuiStore {
         component: <CircleDrawer />,
         description: "Draw circles by clicking around; right click to adjust diameter",
         challenges: "undo/redo, custom drawing (canvas), dialog control",
+        isVisible: true,
+        windowStore: new WindowStore()
+      },
+      "Spreadsheet": {
+        component: <Spreadsheet />,
+        description: "A simple spreadsheet with formula support",
+        challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage",
         isVisible: true,
         windowStore: new WindowStore()
       }
