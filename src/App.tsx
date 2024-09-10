@@ -12,7 +12,7 @@ import CircleDrawer from './components/guis/circleDrawer'
 import Spreadsheet from './components/guis/spreadsheet'
 
 class GuiStore {
-  guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, isVisible: boolean, windowStore: WindowStore } }
+  guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, comments?: string, isVisible: boolean, windowStore: WindowStore } }
 
   constructor() {
     makeAutoObservable(this)
@@ -56,6 +56,7 @@ class GuiStore {
         component: <CircleDrawer />,
         description: "Draw circles by clicking around; right click to adjust diameter",
         challenges: "undo/redo, custom drawing (canvas), dialog control",
+        comments: "right click works if your browser is not protecting the contextual menu; if you are on mobile, I am sorry the spec is this way",
         isVisible: true,
         windowStore: new WindowStore()
       },
@@ -94,6 +95,7 @@ const App: React.FC = observer(() => {
             <div className="App-desc-container">
               <p className='App-desc'>{gui.description}</p>
               <p className='App-desc'><b>Challenges:</b> {gui.challenges}</p>
+              {gui.comments && <p className='App-desc'><i>{gui.comments}</i></p>}
             </div>
           </div>
         )

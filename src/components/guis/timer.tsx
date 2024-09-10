@@ -47,9 +47,9 @@ class TimerStore {
 const timer = new TimerStore()
 
 const Timer = observer(() => <FlexBox flexDirection="column" gap={10}>
-    <FlexBox flexDirection="row" gap={20}>
+    <FlexBox flexDirection="row" alignItems="center" gap={20}>
         <span>Elapsed Time:</span>
-        <meter value={timer.elapsed} min="0" max={timer.duration}></meter>
+        <meter value={timer.elapsed} style={{ position: "relative", top: "0.1em" }} min="0" max={timer.duration}></meter>
     </FlexBox>
     <span style={{ textAlign: "center" }}>{Math.min(timer.elapsed / 1000, timer.duration / 1000)}s</span>
     <FlexBox flexDirection="row" gap={20}>
@@ -61,7 +61,7 @@ const Timer = observer(() => <FlexBox flexDirection="column" gap={10}>
             onChange={(e) => action(() => timer.duration = parseInt(e.target.value))()}>
         </input>
     </FlexBox>
-    <button onClick={() => timer.reset()}>Reset</button>
+    <button onClick={() => timer.reset()} style={{ minHeight: "2em" }}>Reset</button>
 </FlexBox >)
 
 export default Timer
