@@ -186,7 +186,7 @@ const CircleDrawer = observer(() => {
         }
     }
 
-    return <FlexBox flexDirection="column" gap={10}>
+    return <FlexBox flexDirection="column" gap={10} style={{ userSelect: "none", msUserSelect: "none", WebkitUserSelect: "none" }}>
         <FlexBox flexDirection="row" justifyContent="center" gap={10}>
             <button onClick={() => circleStore.undo()} disabled={circleStore.undoStack.length === 0}>Undo</button>
             <button onClick={() => circleStore.redo()} disabled={circleStore.redoStack.length === 0}>Redo</button>
@@ -207,7 +207,7 @@ const CircleDrawer = observer(() => {
                     <FlexBox flexDirection="column" gap={10} alignItems="center">
                         <label>Adjust diameter of circle at ({circleStore.selected?.x}, {circleStore.selected?.y})</label>
                         <FlexBox flexDirection="row" gap={10} justifyContent="center">
-                            <label>{circleStore.selected?.diameter}</label>
+                            <label style={{ width: '40px' }}>{circleStore.selected?.diameter}</label>
                             <input
                                 type="range" min="10" max="200"
                                 value={circleStore.selected?.diameter}

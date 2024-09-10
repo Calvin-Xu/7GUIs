@@ -99,6 +99,9 @@ const CloseButton: React.FC<CloseButtonProps> = ({ onClick, size }) => {
         alignItems: 'center',
         justifyContent: 'center',
         left: size,
+        boxSizing: 'border-box' as const,
+        padding: 0,
+        transform: 'scale(1)' // why mobile Safari
     }
 
     const crossStyle = {
