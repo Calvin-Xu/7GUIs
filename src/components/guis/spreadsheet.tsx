@@ -1,15 +1,41 @@
 import { action, makeAutoObservable } from "mobx"
 import { observer } from "mobx-react"
 import { useState } from "react"
+import { evaluate as evaluateFormula } from "../../parser/parser"
 
 const MAX_ROW = 99
+const COLUMNS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+
 
 class CellStore {
 
     rawValue = ""
+    error = false
 
     constructor() {
-        makeAutoObservable(this)
+        makeAutoObservable(this, {
+            setRawValue: action,
+            setError: action
+        })
+    }
+
+    setRawValue(rawValue: string) {
+        this.rawValue = rawValue
+    }
+
+    setError(error: boolean) {
+        this.error = error
+    }
+
+    get evaluatedValue() {
+        try {
+            const result = evaluateFormula(this.rawValue, spreadsheet)
+            this.setError(false)
+            return result
+        } catch (e: any) {
+            this.setError(true)
+            return e.message
+        }
     }
 }
 
@@ -31,7 +57,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     const handleBlur = action(() => {
         if (cell) {
-            cell.rawValue = tempValue
+            cell.setRawValue(tempValue)
         }
         spreadsheet.setEditingCoordinate(null)
     })
@@ -39,7 +65,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             if (cell) {
-                cell.rawValue = tempValue
+                cell.setRawValue(tempValue)
             }
             const coordinateBelow = { row: Math.min(coordinate.row + 1, MAX_ROW), column: coordinate.column }
             spreadsheet.setEditingCoordinate(coordinateBelow)
@@ -59,6 +85,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundColor: cell?.error ? '#f1a54f' : 'white',
             }}
         >
             {JSON.stringify(spreadsheet.editingCoordinate) == JSON.stringify(coordinate) && cell ? (
@@ -72,18 +99,18 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                     style={{ width: '100%', height: '100%', textAlign: 'center', margin: 0, padding: 0, fontSize: '1em' }}
                 />
             ) : (
-                <div>{cell ? cell.rawValue : ""}</div>
+                <div>{cell ? cell.evaluatedValue : ""}</div>
             )}
         </div>
     )
 })
 
-type Column = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
-    | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z'
+// type Column = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
+// | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z'
 
-interface Coordinate {
+type Coordinate = {
     row: number
-    column: Column
+    column: number
 }
 
 class SpreadSheetStore {
@@ -117,20 +144,33 @@ class SpreadSheetStore {
             this.createCellStore(coordinate)
         }
     }
+
+    getRange(start: Coordinate, end: Coordinate): { coordinate: Coordinate, value: string }[] {
+        const result: { coordinate: Coordinate, value: string }[] = []
+        for (let row = start.row; row <= end.row; row++) {
+            for (let column = start.column; column <= end.column; column++) {
+                const coordinate = { row, column }
+                const key = this.coordinateToKey(coordinate)
+                const cell = this.cells.get(key)
+                if (cell) {
+                    result.push({ coordinate, value: cell.rawValue })
+                }
+            }
+        }
+        return result
+    }
 }
 
 const spreadsheet = new SpreadSheetStore()
 
 const Spreadsheet = observer(() => {
-    const columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-
     return (
         <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "480px" }}>
             <table style={{ borderCollapse: "collapse", width: "100%" }}>
                 <thead>
                     <tr>
                         <th style={{ minWidth: 30, border: "1px solid #ccc" }}></th>
-                        {columns.map(column => (
+                        {COLUMNS.map(column => (
                             <th key={column} style={{ minWidth: 70, textAlign: "center", background: "#f0f0f0", border: "1px solid #ccc" }}>
                                 {column}
                             </th>
@@ -141,9 +181,9 @@ const Spreadsheet = observer(() => {
                     {Array.from({ length: 100 }).map((_, rowIndex) => (
                         <tr key={rowIndex}>
                             <td style={{ textAlign: "center", background: "#f0f0f0", border: "1px solid #ccc" }}>{rowIndex}</td>
-                            {columns.map(column => (
+                            {COLUMNS.map(column => (
                                 < td key={column} style={{ border: "1px solid #ccc", height: "1.5em" }}>
-                                    <Cell coordinate={{ row: rowIndex, column: column as Column }} />
+                                    <Cell coordinate={{ row: rowIndex, column: COLUMNS.indexOf(column) }} />
                                 </td>
                             ))}
                         </tr>
@@ -154,6 +194,7 @@ const Spreadsheet = observer(() => {
     )
 })
 
-export { SpreadSheetStore }
+export { SpreadSheetStore, COLUMNS }
+export type { Coordinate }
 
 export default Spreadsheet
