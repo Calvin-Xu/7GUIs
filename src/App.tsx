@@ -1,7 +1,7 @@
 import React from 'react'
 import './App.css'
 import Counter from "./components/guis/counter"
-import Window, { WindowStore } from "./components/window"
+import Window from './components/window'
 import { makeAutoObservable } from 'mobx'
 import { observer } from 'mobx-react'
 import TemperatureConverter from './components/guis/temperatureConverter'
@@ -12,7 +12,7 @@ import CircleDrawer from './components/guis/circleDrawer'
 import Spreadsheet from './components/guis/spreadsheet'
 
 class GuiStore {
-  guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, comments?: string, isVisible: boolean, windowStore: WindowStore } }
+  guis: { [key: string]: { component: JSX.Element, description: string, challenges: string, comments?: string, isVisible: boolean } }
 
   constructor() {
     makeAutoObservable(this)
@@ -22,35 +22,30 @@ class GuiStore {
         description: "Click button and number goes up",
         challenges: "basic ideas of language/toolkit",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "Temperature Converter": {
         component: <TemperatureConverter />,
         description: "Celsius to Fahrenheit, and the other way around",
         challenges: "bidirectional data flow, user-provided text input",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "Flight Booker": {
         component: <FlightBooker />,
         description: "Book a flight (default JavaScript date string parsing)",
         challenges: "constraints",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "Timer": {
         component: <Timer />,
         description: "Timer with a duration slider to play with",
         challenges: "concurrency, competing user/signal interactions, responsiveness.",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "CRUD": {
         component: <CRUD />,
         description: "A classic but satisfying CRUD interface",
         challenges: "separating the domain and presentation logic, managing mutation, sane selection focus when deleting and filtering",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "Circle Drawer": {
         component: <CircleDrawer />,
@@ -58,7 +53,6 @@ class GuiStore {
         challenges: "undo/redo, custom drawing (canvas), dialog control",
         comments: "right click works if your browser is not protecting the contextual menu; if you are on mobile, I am sorry the spec is this way",
         isVisible: true,
-        windowStore: new WindowStore()
       },
       "Spreadsheet": {
         component: <Spreadsheet />,
@@ -66,7 +60,6 @@ class GuiStore {
         challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage, formula support",
         comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3, 7, E1), F1) <br/> prefix notation only for now; source <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>here</a>",
         isVisible: true,
-        windowStore: new WindowStore()
       }
     }
   }
@@ -89,7 +82,7 @@ const App: React.FC = observer(() => {
         gui.isVisible && (
           <div key={name} className="App-row">
             <div className="App-guis">
-              <Window title={name} resizable={true} onClose={() => guiStore.toggleVisibility(name)} windowStore={gui.windowStore}>
+              <Window title={name} onClose={() => guiStore.toggleVisibility(name)}>
                 {gui.component}
               </Window>
             </div>

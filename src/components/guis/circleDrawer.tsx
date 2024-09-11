@@ -2,7 +2,7 @@ import { observer } from "mobx-react"
 import FlexBox from "../flexbox"
 import { action, autorun, makeObservable, observable } from "mobx"
 import { useEffect, useRef, useState } from "react"
-import Window, { WindowStore } from "../window"
+import Window from "../window"
 
 interface Circle {
     id: number // autoincrement
@@ -108,7 +108,6 @@ const CircleDrawer = observer(() => {
     const [showPopup, setShowPopup] = useState(false)
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
     const [oldDiameter, setOldDiameter] = useState(0)
-    const windowStore = new WindowStore()
 
     useEffect(() => {
         const ctx = canvasRef.current?.getContext("2d")
@@ -203,7 +202,7 @@ const CircleDrawer = observer(() => {
                 top: `${popupPosition.y}px`,
                 zIndex: 9999
             }}>
-                <Window title={""} resizable={false} onClose={closePopup} windowStore={windowStore}>
+                <Window title={""} onClose={closePopup}>
                     <FlexBox flexDirection="column" gap={10} alignItems="center">
                         <label>Adjust diameter of circle at ({circleStore.selected?.x}, {circleStore.selected?.y})</label>
                         <FlexBox flexDirection="row" gap={10} justifyContent="center">
