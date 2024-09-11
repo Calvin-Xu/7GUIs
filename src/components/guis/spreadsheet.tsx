@@ -41,8 +41,8 @@ class CellStore {
 }
 
 const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
-    const [tempValue, setTempValue] = useState("")
     let cell = spreadsheet.getCellStore(coordinate)
+    const [tempValue, setTempValue] = useState(cell?.rawValue || "")
 
     const handleDoubleClick = action(() => {
         if (!cell) {

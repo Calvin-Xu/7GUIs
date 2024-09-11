@@ -1,17 +1,18 @@
 .App {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  /* width: 100%; */
   align-items: center;
   justify-content: center;
-  min-width: 500px;
+  min-width: 390px;
+  font-variant-numeric: tabular-nums;
 }
 
 .App-row {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  width: 70%;
+  width: 65%;
   margin: 20px 0;
 }
 
@@ -37,6 +38,7 @@
 }
 
 @media (max-width: 768px) {
+
   .App-row {
     flex-direction: column;
     align-items: center;

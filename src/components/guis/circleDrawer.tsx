@@ -3,6 +3,7 @@ import FlexBox from "../flexbox"
 import { action, autorun, makeObservable, observable } from "mobx"
 import { useEffect, useRef, useState } from "react"
 import Window from "../window"
+import { generateCirclesExample } from "../../generateCirclesExample"
 
 interface Circle {
     id: number // autoincrement
@@ -99,7 +100,8 @@ class CircleStore {
     }
 }
 
-const circleStore = new CircleStore()
+// const circleStore = new CircleStore()
+const circleStore = generateCirclesExample()
 
 const SELECTED_COLOR = "rgba(186, 214, 251, 0.75)"
 
@@ -220,4 +222,5 @@ const CircleDrawer = observer(() => {
     </FlexBox>
 })
 
+export { CircleStore }
 export default CircleDrawer

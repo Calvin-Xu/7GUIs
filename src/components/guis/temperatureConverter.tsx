@@ -27,11 +27,13 @@ const round = (n: number) => Math.round(n * 100) / 100
 const TemperatureConverter = observer(() =>
     <FlexBox flexDirection="row" gap={10}>
         <input type="number"
+            style={{ maxWidth: 100 }}
             value={Number.isNaN(converter.celsius) ? "" : round(converter.celsius).toString()}
             onChange={converter.onChangeCelsius}></input>
         <span>°C</span>
         <span>=</span>
         <input type="number"
+            style={{ maxWidth: 100 }}
             value={Number.isNaN(converter.fahrenheit) ? "" : round(converter.fahrenheit).toString()}
             onChange={converter.onChangeFahrenheit}></input>
         <span>°F</span>

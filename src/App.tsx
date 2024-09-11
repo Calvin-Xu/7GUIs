@@ -58,7 +58,7 @@ class GuiStore {
         component: <Spreadsheet />,
         description: "A simple spreadsheet with formula support (double click to edit)",
         challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage, formula support",
-        comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3, 7, E1), F1) <br/> prefix notation only for now; source <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>here</a>",
+        comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3.5, 7, E1), F1) <br/> prefix notation only for now; <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>source</a>",
         isVisible: true,
       }
     }
@@ -77,7 +77,7 @@ const App: React.FC = observer(() => {
   return (
     <div className="App">
       <h1 style={{ textAlign: "center" }}>7GUIs with React + MobX + TypeScript</h1>
-      <p style={{ textAlign: "left", padding: "0 1em" }}>My accurate implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
+      <p style={{ textAlign: "left", padding: "0 1em" }}>My concise & accurate implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
       {Object.entries(guiStore.guis).map(([name, gui]) => (
         gui.isVisible && (
           <div key={name} className="App-row">

@@ -10,10 +10,7 @@ type Argument = NumberLiteral | Argument[]
 type Expression = Coordinate | Range | NumberLiteral | Textual | Procedure | List
 
 const parseCoordinate = (str: string): Coordinate => {
-    const row: number = parseInt(str.slice(1))
-    const column: number = COLUMNS.indexOf(str[0])
-
-    return { row, column }
+    return { row: parseInt(str.slice(1)), column: COLUMNS.indexOf(str[0]) }
 }
 
 const flattenNumericalArgs = (args: Argument[]): number[] => {
@@ -24,7 +21,7 @@ const flattenNumericalArgs = (args: Argument[]): number[] => {
         } else {
             const num = arg.toString() == "" ? 0 : parseFloat(arg.toString())
             if (isNaN(num)) {
-                throw new Error("Invalid numerical arg: " + arg)
+                throw new Error(`Invalid numerical arg: '${arg}'`)
             }
             flattened.push(num)
         }
@@ -32,22 +29,25 @@ const flattenNumericalArgs = (args: Argument[]): number[] => {
     return flattened
 }
 
-const makeNumericalProcedure = (args: Argument[], fn: (args: number[]) => number): Expression => {
-    const arg_nums: number[] = flattenNumericalArgs(args)
-    return fn(arg_nums).toPrecision(3)
+const makeNumericalProcedure = (fn: (args: number[]) => number): Procedure => {
+    // treats all args as numbers; flattens lists in args
+    return (args: Argument[]) => {
+        const arg_nums: number[] = flattenNumericalArgs(args)
+        return fn(arg_nums).toPrecision(3)
+    }
 }
 
 const procedures: { [key: string]: (Procedure) } = {
-    "add": (args: Argument[]) => makeNumericalProcedure(args, args => args[0] + args[1]),
-    "sub": (args: Argument[]) => makeNumericalProcedure(args, args => args[0] - args[1]),
-    "mul": (args: Argument[]) => makeNumericalProcedure(args, args => args[0] * args[1]),
-    "div": (args: Argument[]) => makeNumericalProcedure(args, args => args[0] / args[1]),
-    "mod": (args: Argument[]) => makeNumericalProcedure(args, args => args[0] % args[1]),
-    "pow": (args: Argument[]) => makeNumericalProcedure(args, args => Math.pow(args[0], args[1])),
-    "sum": (args: Argument[]) => makeNumericalProcedure(args, args => args.reduce((a, b) => a + b, 0)),
-    "prod": (args: Argument[]) => makeNumericalProcedure(args, args => args.reduce((a, b) => a * b, 1)),
-    "mean": (args: Argument[]) => makeNumericalProcedure(args, args => args.reduce((a, b) => a + b, 0) / args.length),
-    "median": (args: Argument[]) => makeNumericalProcedure(args, args => {
+    "add": makeNumericalProcedure(args => args[0] + args[1]),
+    "sub": makeNumericalProcedure(args => args[0] - args[1]),
+    "mul": makeNumericalProcedure(args => args[0] * args[1]),
+    "div": makeNumericalProcedure(args => args[0] / args[1]),
+    "mod": makeNumericalProcedure(args => args[0] % args[1]),
+    "pow": makeNumericalProcedure(args => Math.pow(args[0], args[1])),
+    "sum": makeNumericalProcedure(args => args.reduce((a, b) => a + b, 0)),
+    "prod": makeNumericalProcedure(args => args.reduce((a, b) => a * b, 1)),
+    "mean": makeNumericalProcedure(args => args.reduce((a, b) => a + b, 0) / args.length),
+    "median": makeNumericalProcedure(args => {
         const sorted = args.sort((a, b) => a - b)
         if (sorted.length % 2 === 0) {
             return (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
@@ -55,14 +55,14 @@ const procedures: { [key: string]: (Procedure) } = {
             return sorted[Math.floor(sorted.length / 2)]
         }
     }),
-    "var": (args: Argument[]) => makeNumericalProcedure(args, args => {
+    "var": makeNumericalProcedure(args => {
         const mean = procedures["mean"](args) as number
         const variance = (procedures["sum"](args.map(arg => Math.pow(arg - mean, 2))) as number) / args.length
         return variance
     }),
-    "std": (args: Argument[]) => makeNumericalProcedure(args, args => Math.sqrt(procedures["var"](args) as number)),
-    "min": (args: Argument[]) => makeNumericalProcedure(args, args => args.reduce((a, b) => a < b ? a : b, args[0])),
-    "max": (args: Argument[]) => makeNumericalProcedure(args, args => args.reduce((a, b) => a > b ? a : b, args[0])),
+    "std": makeNumericalProcedure(args => Math.sqrt(procedures["var"](args) as number)),
+    "min": makeNumericalProcedure(args => args.reduce((a, b) => a < b ? a : b, args[0])),
+    "max": makeNumericalProcedure(args => args.reduce((a, b) => a > b ? a : b, args[0])),
 }
 
 const tokenize = (input: string): string[] => {
@@ -140,10 +140,10 @@ const parseExpr = (tokens: string[], context: SpreadSheetStore): Expression => {
 }
 
 const evaluate = (input: string, context: SpreadSheetStore): string => {
-    const tokens = tokenize(input)
     if (!input.startsWith('=')) {
         return input
     }
+    const tokens = tokenize(input)
     try {
         return parseExpr(tokens.slice(1), context).toString()
     } catch (e: any) {
