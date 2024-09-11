@@ -2,6 +2,8 @@ import { action, makeAutoObservable } from "mobx"
 import { observer } from "mobx-react"
 import { useState } from "react"
 
+const MAX_ROW = 99
+
 class CellStore {
 
     rawValue = ""
@@ -12,7 +14,6 @@ class CellStore {
 }
 
 const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
-    const [isEditing, setIsEditing] = useState(false)
     const [tempValue, setTempValue] = useState("")
     let cell = spreadsheet.getCellStore(coordinate)
 
@@ -21,7 +22,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             cell = spreadsheet.createCellStore(coordinate)
         }
         setTempValue(cell.rawValue)
-        setIsEditing(true)
+        spreadsheet.setEditingCoordinate(coordinate)
     })
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +33,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
         if (cell) {
             cell.rawValue = tempValue
         }
-        setIsEditing(false)
+        spreadsheet.setEditingCoordinate(null)
     })
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -40,10 +41,11 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             if (cell) {
                 cell.rawValue = tempValue
             }
-            setIsEditing(false)
+            const coordinateBelow = { row: Math.min(coordinate.row + 1, MAX_ROW), column: coordinate.column }
+            spreadsheet.setEditingCoordinate(coordinateBelow)
         } else if (event.key === 'Escape') {
             setTempValue(cell!.rawValue)
-            setIsEditing(false)
+            spreadsheet.setEditingCoordinate(null)
         }
     }
 
@@ -59,7 +61,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 justifyContent: 'center',
             }}
         >
-            {isEditing && cell ? (
+            {JSON.stringify(spreadsheet.editingCoordinate) == JSON.stringify(coordinate) && cell ? (
                 <input
                     type="text"
                     value={tempValue}
@@ -84,8 +86,9 @@ interface Coordinate {
     column: Column
 }
 
-class SpreadsheetStore {
+class SpreadSheetStore {
     cells: Map<string, CellStore>
+    editingCoordinate: Coordinate | null = null
 
     constructor() {
         this.cells = new Map()
@@ -107,9 +110,16 @@ class SpreadsheetStore {
         this.cells.set(key, newCellStore)
         return newCellStore
     }
+
+    setEditingCoordinate(coordinate: Coordinate | null) {
+        this.editingCoordinate = coordinate
+        if (coordinate && !this.getCellStore(coordinate)) {
+            this.createCellStore(coordinate)
+        }
+    }
 }
 
-const spreadsheet = new SpreadsheetStore()
+const spreadsheet = new SpreadSheetStore()
 
 const Spreadsheet = observer(() => {
     const columns = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
@@ -143,5 +153,7 @@ const Spreadsheet = observer(() => {
         </div >
     )
 })
+
+export { SpreadSheetStore }
 
 export default Spreadsheet
