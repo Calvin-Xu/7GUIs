@@ -9,13 +9,32 @@ type Procedure = (args: Argument[]) => Expression
 type Argument = NumberLiteral | Argument[]
 type Expression = Coordinate | Range | NumberLiteral | Textual | Procedure | List
 
-const isTextual = (expr: Expression): expr is Textual => typeof expr === 'string'
-const isNumberLiteral = (expr: Expression): expr is NumberLiteral => typeof expr === 'number'
-const isProcedure = (expr: Expression): expr is Procedure => typeof expr === 'function'
+const parseCoordinate = (str: string): Coordinate => {
+    const row: number = parseInt(str.slice(1))
+    const column: number = COLUMNS.indexOf(str[0])
 
-const makeNumericalProcedure = (args: Argument[], fn: (args: number[]) => Expression): Expression => {
-    const arg_nums: number[] = args.map(arg => parseFloat(arg.toString()))
-    return fn(arg_nums)
+    return { row, column }
+}
+
+const flattenNumericalArgs = (args: Argument[]): number[] => {
+    const flattened: number[] = []
+    args.forEach(arg => {
+        if (Array.isArray(arg)) {
+            flattened.push(...flattenNumericalArgs(arg))
+        } else {
+            const num = arg.toString() == "" ? 0 : parseFloat(arg.toString())
+            if (isNaN(num)) {
+                throw new Error("Invalid numerical arg: " + arg)
+            }
+            flattened.push(num)
+        }
+    })
+    return flattened
+}
+
+const makeNumericalProcedure = (args: Argument[], fn: (args: number[]) => number): Expression => {
+    const arg_nums: number[] = flattenNumericalArgs(args)
+    return fn(arg_nums).toPrecision(3)
 }
 
 const procedures: { [key: string]: (Procedure) } = {
@@ -83,26 +102,20 @@ const parseExpr = (tokens: string[], context: SpreadSheetStore): Expression => {
         return parseFloat(token) as NumberLiteral
     }
 
-    if (token !== "=") {
-        throw new Error(`Unexpected token ${token}; perhaps you mean '=${token}'.`)
-    }
-
-    token = tokens.shift() // remove '='
-    if (!token) {
-        throw new Error("Unexpected end of input.")
+    // handle range
+    if (token.includes(":")) {
+        const [start, end] = token.split(":")
+        return context.getRange(parseCoordinate(start), parseCoordinate(end)).map(cell => cell.value)
     }
 
     // handle assignment
     if (token.match(/^[A-Z]+[0-9]+$/)) {
-        const row: number = parseInt(token.slice(1))
-        const column: number = COLUMNS.indexOf(token[0])
-
         try {
-            return context.getCellStore({ row, column } as Coordinate)?.evaluatedValue || "" as string
-        } catch (e: any) { throw `Error obtaining value of ${token}: ` + e.message + "." }
+            return context.getCellStore(parseCoordinate(token))?.evaluatedValue || "" as string
+        } catch (e: any) { throw `Could not obtain value of ${token}: ` + e.message + "." }
     }
 
-
+    // handle procedure call
     if (!procedures[token]) {
         throw new Error(`Procedure ${token} not found.`)
     }
@@ -132,10 +145,10 @@ const evaluate = (input: string, context: SpreadSheetStore): string => {
         return input
     }
     try {
-        return parseExpr(tokens, context).toString()
+        return parseExpr(tokens.slice(1), context).toString()
     } catch (e: any) {
         throw new Error("Error: " + e.message)
     }
 }
 
-export { evaluate }
+export { evaluate, parseCoordinate }

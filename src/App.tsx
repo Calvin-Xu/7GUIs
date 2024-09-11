@@ -63,7 +63,7 @@ class GuiStore {
       "Spreadsheet": {
         component: <Spreadsheet />,
         description: "A simple spreadsheet with formula support",
-        challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage",
+        challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage, formula support",
         isVisible: true,
         windowStore: new WindowStore()
       }

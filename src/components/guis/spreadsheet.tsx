@@ -153,7 +153,7 @@ class SpreadSheetStore {
                 const key = this.coordinateToKey(coordinate)
                 const cell = this.cells.get(key)
                 if (cell) {
-                    result.push({ coordinate, value: cell.rawValue })
+                    result.push({ coordinate, value: cell.evaluatedValue })
                 }
             }
         }
