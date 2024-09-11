@@ -213,16 +213,6 @@ const Window: React.FC<WindowProps> = observer((props: WindowProps) => {
             height: `calc(100% - ${titleBarHeight + 20}px)`,
             backgroundColor: "white"
         },
-        // closeButton: {
-        //     width: titleBarHeight / 2,
-        //     height: titleBarHeight / 2,
-        //     backgroundColor: '#ec6a5e',
-        //     borderRadius: '50%',
-        //     border: 'none',
-        //     left: titleBarHeight / 2,
-        //     position: 'absolute' as const,
-        // }
-        //  could have not used a component if supported :hover
     }
 
     return (

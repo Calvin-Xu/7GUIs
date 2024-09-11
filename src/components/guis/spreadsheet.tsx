@@ -2,6 +2,7 @@ import { action, makeAutoObservable } from "mobx"
 import { observer } from "mobx-react"
 import { useState } from "react"
 import { evaluate as evaluateFormula } from "../../parser/parser"
+import { generateSpreadsheetExample } from "../../generateSpreadsheetExample"
 
 const MAX_ROW = 99
 const COLUMNS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
@@ -123,7 +124,7 @@ class SpreadSheetStore {
     }
 
     private coordinateToKey({ row, column }: Coordinate): string {
-        return `${column}${row}`
+        return `${COLUMNS[column]}${row}`
     }
 
     getCellStore(coordinate: Coordinate): CellStore | undefined {
@@ -161,11 +162,12 @@ class SpreadSheetStore {
     }
 }
 
-const spreadsheet = new SpreadSheetStore()
+// const spreadsheet = new SpreadSheetStore()
+const spreadsheet = generateSpreadsheetExample()
 
 const Spreadsheet = observer(() => {
     return (
-        <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "480px" }}>
+        <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "490px" }}>
             <table style={{ borderCollapse: "collapse", width: "100%" }}>
                 <thead>
                     <tr>
@@ -194,7 +196,7 @@ const Spreadsheet = observer(() => {
     )
 })
 
-export { SpreadSheetStore, COLUMNS }
+export { SpreadSheetStore, CellStore, COLUMNS }
 export type { Coordinate }
 
 export default Spreadsheet
