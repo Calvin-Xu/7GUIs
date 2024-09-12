@@ -198,6 +198,11 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             } else if (event.key === 'Escape') {
                 event.preventDefault()
                 spreadsheet.setSelectedCoordinate(undefined)
+            } else if (event.key === 'Backspace') {
+                event.preventDefault()
+                if (cell) {
+                    cell.setRawValue("")
+                }
             }
         }
     }
