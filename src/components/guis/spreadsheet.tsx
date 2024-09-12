@@ -129,7 +129,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     useEffect(() => {
         if (isSelected && !isEditing) {
-            // if the cell is selected but not being edited, focus the cell's div
+            // If the cell is selected but not being edited, focus the cell's div
             cellDivRef.current?.focus()
         }
     }, [isSelected, isEditing])
@@ -139,12 +139,12 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     })
 
     const handleDoubleClick = action(() => {
-        if (!cell) {
-            cell = spreadsheet.createCellStore(coordinate)
+        if (cell && cell.rawValue !== "") {
+            setTempValue(cell.rawValue)
+            spreadsheet.setEditingCoordinate(coordinate)
+            spreadsheet.setSelectedCoordinate(coordinate)
         }
-        setTempValue(cell.rawValue)
-        spreadsheet.setEditingCoordinate(coordinate)
-        spreadsheet.setSelectedCoordinate(coordinate)
+        // Do nothing if the cell is empty
     })
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,7 +159,8 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     })
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
-        if (isEditing) { // edit mode
+        if (isEditing) {
+            // Handle keys in edit mode
             if (event.key === 'Enter') {
                 if (cell) {
                     cell.setRawValue(tempValue)
@@ -168,8 +169,11 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                     row: Math.min(coordinate.row + 1, MAX_ROW),
                     column: coordinate.column,
                 }
-                spreadsheet.setEditingCoordinate(coordinateBelow)
                 spreadsheet.setSelectedCoordinate(coordinateBelow)
+                const cellBelow = spreadsheet.getCellStore(coordinateBelow)
+                if (cellBelow && cellBelow.rawValue !== "") {
+                    spreadsheet.setEditingCoordinate(coordinateBelow)
+                }
                 event.preventDefault()
             } else if (event.key === 'Escape') {
                 setTempValue(cell!.rawValue)
@@ -178,7 +182,8 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 event.preventDefault()
             }
             // Do not prevent default to allow text navigation
-        } else if (isSelected) { // selection mode
+        } else if (isSelected) {
+            // Handle keys in selection mode
             if (event.key === 'ArrowUp') {
                 event.preventDefault()
                 spreadsheet.moveSelection(-1, 0)
@@ -203,6 +208,16 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 if (cell) {
                     cell.setRawValue("")
                 }
+            } else if (
+                (cell === undefined || cell.rawValue === "") &&
+                event.key.length === 1 &&
+                !event.ctrlKey &&
+                !event.metaKey
+            ) {
+                // Start editing the cell with the key pressed
+                event.preventDefault()
+                spreadsheet.setEditingCoordinate(coordinate)
+                setTempValue(event.key)
             }
         }
     }
