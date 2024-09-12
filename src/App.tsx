@@ -56,7 +56,7 @@ class GuiStore {
       },
       "Spreadsheet": {
         component: <Spreadsheet />,
-        description: "A simple spreadsheet with formula support (double click to edit)",
+        description: "A simple spreadsheet with formula support (click or arrow key to move selection, enter or double click to edit, esc to cancel)",
         challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage, formula support",
         comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3.5, 7, E1), F1) <br/> prefix notation only for now; <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>source</a>",
         isVisible: true,
