@@ -33,7 +33,7 @@ const makeNumericalProcedure = (fn: (args: number[]) => number): Procedure => {
     // treats all args as numbers; flattens lists in args
     return (args: Argument[]) => {
         const arg_nums: number[] = flattenNumericalArgs(args)
-        return fn(arg_nums).toPrecision(3)
+        return fn(arg_nums).toFixed(2)
     }
 }
 
