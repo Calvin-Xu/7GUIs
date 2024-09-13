@@ -3,6 +3,7 @@ import { observer } from "mobx-react"
 import { useState, useRef, useEffect } from "react"
 import { evaluate as evaluateFormula } from "../../parser/parser"
 import { generateSpreadsheetExample } from "../../generateSpreadsheetExample"
+import FlexBox from "../flexbox"
 
 const MAX_ROW = 99
 const COLUMNS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
@@ -72,11 +73,13 @@ class SpreadSheetStore {
         return newCellStore
     }
 
+    deleteCellStore(coordinate: Coordinate) {
+        const key = this.coordinateToKey(coordinate)
+        this.cells.delete(key)
+    }
+
     setEditingCoordinate(coordinate: Coordinate | undefined) {
         this.editingCoordinate = coordinate
-        if (coordinate && !this.getCellStore(coordinate)) {
-            this.createCellStore(coordinate)
-        }
     }
 
     setSelectedCoordinate(coordinate: Coordinate | undefined) {
@@ -129,7 +132,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     useEffect(() => {
         if (isSelected && !isEditing) {
-            // If the cell is selected but not being edited, focus the cell's div
+            // if the cell is selected but not being edited, focus the cell's div
             cellDivRef.current?.focus()
         }
     }, [isSelected, isEditing])
@@ -144,7 +147,6 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             spreadsheet.setEditingCoordinate(coordinate)
             spreadsheet.setSelectedCoordinate(coordinate)
         }
-        // Do nothing if the cell is empty
     })
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +154,12 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     }
 
     const handleBlur = action(() => {
-        if (cell) {
+        if (tempValue !== "") {
+            // only create a cell store if there's content to save
+            let cell = spreadsheet.getCellStore(coordinate)
+            if (!cell) {
+                cell = spreadsheet.createCellStore(coordinate)
+            }
             cell.setRawValue(tempValue)
         }
         spreadsheet.setEditingCoordinate(undefined)
@@ -160,9 +167,13 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (isEditing) {
-            // Handle keys in edit mode
+            // editing mode
             if (event.key === 'Enter') {
-                if (cell) {
+                if (tempValue !== "") {
+                    let cell = spreadsheet.getCellStore(coordinate)
+                    if (!cell) {
+                        cell = spreadsheet.createCellStore(coordinate)
+                    }
                     cell.setRawValue(tempValue)
                 }
                 const coordinateBelow = {
@@ -176,14 +187,13 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 }
                 event.preventDefault()
             } else if (event.key === 'Escape') {
-                setTempValue(cell!.rawValue)
+                setTempValue(cell ? cell.rawValue : "")
                 spreadsheet.setEditingCoordinate(undefined)
                 spreadsheet.setSelectedCoordinate(coordinate)
                 event.preventDefault()
             }
-            // Do not prevent default to allow text navigation
         } else if (isSelected) {
-            // Handle keys in selection mode
+            // select mode
             if (event.key === 'ArrowUp') {
                 event.preventDefault()
                 spreadsheet.moveSelection(-1, 0)
@@ -198,8 +208,12 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 spreadsheet.moveSelection(0, 1)
             } else if (event.key === 'Enter') {
                 event.preventDefault()
+                if (cell && cell.rawValue !== "") {
+                    setTempValue(cell.rawValue)
+                } else {
+                    setTempValue("")
+                }
                 spreadsheet.setEditingCoordinate(coordinate)
-                setTempValue(cell ? cell.rawValue : "")
             } else if (event.key === 'Escape') {
                 event.preventDefault()
                 spreadsheet.setSelectedCoordinate(undefined)
@@ -207,17 +221,19 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 event.preventDefault()
                 if (cell) {
                     cell.setRawValue("")
+                    if (cell.rawValue === "") {
+                        spreadsheet.deleteCellStore(coordinate)
+                    }
                 }
             } else if (
-                (cell === undefined || cell.rawValue === "") &&
+                // start editing on any printable character
                 event.key.length === 1 &&
                 !event.ctrlKey &&
                 !event.metaKey
             ) {
-                // Start editing the cell with the key pressed
                 event.preventDefault()
-                spreadsheet.setEditingCoordinate(coordinate)
                 setTempValue(event.key)
+                spreadsheet.setEditingCoordinate(coordinate)
             }
         }
     }
@@ -240,7 +256,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 outline: isSelected ? '2px solid #2963d9' : 'none',
             }}
         >
-            {isEditing && cell ? (
+            {isEditing ? (
                 <input
                     type="text"
                     value={tempValue}
@@ -266,57 +282,112 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     )
 })
 
+const Minibuffer = observer(() => {
+    const coordinate = spreadsheet.selectedCoordinate
+    let cellLabel = "No Selection"
+    let cell: CellStore | undefined
+    let inputValue = ""
+
+    if (coordinate) {
+        cell = spreadsheet.getCellStore(coordinate)
+        cellLabel = `Cell ${COLUMNS[coordinate.column]}${coordinate.row}:`
+        inputValue = cell ? cell.rawValue : ""
+    }
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (coordinate) {
+            let cell = spreadsheet.getCellStore(coordinate)
+            if (!cell) {
+                cell = spreadsheet.createCellStore(coordinate)
+            }
+            cell.setRawValue(event.target.value)
+        }
+    }
+
+    return (
+        <FlexBox
+            style={{
+                padding: '5px 0',
+                borderTop: '1px solid #ccc',
+                backgroundColor: 'rgba(240, 240, 240, 0.75)',
+                borderRadius: '0 0 5px 5px',
+                alignItems: 'center',
+            }}>
+            <label style={{ fontWeight: 'bold', margin: '0 10px' }}>
+                {cellLabel}
+            </label>
+            <input
+                type="text"
+                value={inputValue}
+                onChange={handleChange}
+                disabled={!coordinate}
+                style={{
+                    flex: 1,
+                    padding: '5px',
+                    marginRight: '10px',
+                    fontSize: '1em',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                }}
+            />
+        </FlexBox>
+    )
+})
+
 const Spreadsheet = observer(() => {
     return (
-        <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "490px" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%" }}>
-                <thead>
-                    <tr>
-                        <th style={{ minWidth: 30, border: "1px solid #ccc" }}></th>
-                        {COLUMNS.map(column => (
-                            <th
-                                key={column}
-                                style={{
-                                    minWidth: 70,
-                                    textAlign: "center",
-                                    background: "#f0f0f0",
-                                    border: "1px solid #ccc",
-                                }}
-                            >
-                                {column}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {Array.from({ length: 100 }).map((_, rowIndex) => (
-                        <tr key={rowIndex}>
-                            <td
-                                style={{
-                                    textAlign: "center",
-                                    background: "#f0f0f0",
-                                    border: "1px solid #ccc",
-                                }}
-                            >
-                                {rowIndex}
-                            </td>
+        <div>
+            <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "490px" }}>
+                <table style={{ borderCollapse: "collapse", width: "100%" }}>
+                    <thead>
+                        <tr>
+                            <th style={{ minWidth: 30, border: "1px solid #ccc" }}></th>
                             {COLUMNS.map(column => (
-                                <td
+                                <th
                                     key={column}
-                                    style={{ border: "1px solid #ccc", height: "1.5em" }}
+                                    style={{
+                                        minWidth: 70,
+                                        textAlign: "center",
+                                        background: "#f0f0f0",
+                                        border: "1px solid #ccc",
+                                    }}
                                 >
-                                    <Cell
-                                        coordinate={{
-                                            row: rowIndex,
-                                            column: COLUMNS.indexOf(column),
-                                        }}
-                                    />
-                                </td>
+                                    {column}
+                                </th>
                             ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: 100 }).map((_, rowIndex) => (
+                            <tr key={rowIndex}>
+                                <td
+                                    style={{
+                                        textAlign: "center",
+                                        background: "#f0f0f0",
+                                        border: "1px solid #ccc",
+                                    }}
+                                >
+                                    {rowIndex}
+                                </td>
+                                {COLUMNS.map(column => (
+                                    <td
+                                        key={column}
+                                        style={{ border: "1px solid #ccc", height: "1.5em" }}
+                                    >
+                                        <Cell
+                                            coordinate={{
+                                                row: rowIndex,
+                                                column: COLUMNS.indexOf(column),
+                                            }}
+                                        />
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Minibuffer />
         </div>
     )
 })

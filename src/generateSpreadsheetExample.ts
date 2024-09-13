@@ -69,7 +69,7 @@ export const generateSpreadsheetExample = () => {
     setCell("F5", "I am Error")
     setCell("F6", "=std(A1:A12)")
     store.getCellStore(parseCoordinate("F6"))?.setError(true)
-    store.setSelectedCoordinate(parseCoordinate("A0"))
+    store.setSelectedCoordinate(parseCoordinate("F6"))
 
     return store
 }
