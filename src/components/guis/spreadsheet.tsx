@@ -201,7 +201,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                     column: coordinate.column,
                 }
                 const cellBelow = spreadsheet.getCellStore(coordinateBelow)
-                spreadsheet.selectionManager.editCell(cellBelow)
+                spreadsheet.selectionManager.selectCell(cellBelow)
                 event.preventDefault()
             } else if (event.key === 'Escape') {
                 cell.setRawValue(originalValue)

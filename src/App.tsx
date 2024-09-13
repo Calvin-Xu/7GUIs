@@ -58,7 +58,7 @@ class GuiStore {
         component: <Spreadsheet />,
         description: "A fancier spreadsheet than per the original spec with formula support and intuitive UX (click or arrow key to change selection, enter or double click (or just start typing) to edit, esc to cancel and unselect, backspace to clear)",
         challenges: "change propagation, widget customization, implementing a more authentic/involved GUI application, lazy rendering & sparse storage, formula support, crafting user experience",
-        comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3.5, 7, E1), F1) <br/> prefix notation only for now; <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>source</a>",
+        comments: "supported formula example: =mean(B1:C5, C7:C12, sum(3.5, 7, E1), F1) <a href='https://github.com/Calvin-Xu/7GUIs/blob/main/src/parser/parser.ts'>parser source</a> <br><br> visualize re-renders with React DevTools - Profiler - Highlight updates when components render",
         isVisible: true,
       }
     }
