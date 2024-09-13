@@ -5,7 +5,8 @@ export const generateSpreadsheetExample = () => {
     const store = new SpreadSheetStore()
 
     const setCell = (coordinate: string, rawValue: string) => {
-        const cellStore = store.createCellStore(parseCoordinate(coordinate))
+        // const cellStore = store.createCellStore(parseCoordinate(coordinate))
+        const cellStore = store.getCellStore(parseCoordinate(coordinate))
         cellStore.setRawValue(rawValue)
     }
 
@@ -69,7 +70,7 @@ export const generateSpreadsheetExample = () => {
     setCell("F5", "I am Error")
     setCell("F6", "=std(A1:A12)")
     store.getCellStore(parseCoordinate("F6"))?.setError(true)
-    store.setSelectedCoordinate(parseCoordinate("F6"))
+    store.selectionManager.selectCell(store.getCellStore(parseCoordinate("F6")))
 
     return store
 }

@@ -1,4 +1,4 @@
-import { action, makeAutoObservable } from "mobx"
+import { action, makeAutoObservable, observable } from "mobx"
 import { observer } from "mobx-react"
 import React, { useState, useRef, useEffect } from "react"
 import { evaluate as evaluateFormula } from "../../parser/parser"
@@ -8,17 +8,25 @@ import FlexBox from "../flexbox"
 const MAX_ROW = 99
 const COLUMNS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 
-const coordinatesEqual = (a: Coordinate | undefined, b: Coordinate | undefined) =>
-    a?.row === b?.row && a?.column === b?.column
+type Coordinate = {
+    row: number
+    column: number
+}
 
 class CellStore {
     rawValue = ""
     error = false
+    isSelected = false
+    isEditing = false
+    coordinate: Coordinate
 
-    constructor() {
+    constructor(coordinate: Coordinate) {
+        this.coordinate = coordinate
         makeAutoObservable(this, {
             setRawValue: action,
             setError: action,
+            setSelected: action,
+            setEditing: action,
         })
     }
 
@@ -28,6 +36,14 @@ class CellStore {
 
     setError(error: boolean) {
         this.error = error
+    }
+
+    setSelected(selected: boolean) {
+        this.isSelected = selected
+    }
+
+    setEditing(editing: boolean) {
+        this.isEditing = editing
     }
 
     get evaluatedValue() {
@@ -42,18 +58,46 @@ class CellStore {
     }
 }
 
-type Coordinate = {
-    row: number
-    column: number
+class SelectionManager {
+    selectedCell: CellStore | null = null
+
+    constructor() {
+        makeAutoObservable(this, {
+            selectedCell: observable,
+            selectCell: action,
+        })
+    }
+
+    selectCell(cell: CellStore) {
+        if (this.selectedCell && this.selectedCell !== cell) {
+            this.selectedCell.setSelected(false)
+            this.selectedCell.setEditing(false)
+        }
+        cell.setSelected(true)
+        this.selectedCell = cell
+    }
+
+    editCell(cell: CellStore) {
+        this.selectCell(cell)
+        cell.setEditing(true)
+    }
+
+    clearSelection() {
+        if (this.selectedCell) {
+            this.selectedCell.setSelected(false)
+            this.selectedCell.setEditing(false)
+            this.selectedCell = null
+        }
+    }
 }
 
 class SpreadSheetStore {
     cells: Map<string, CellStore>
-    editingCoordinate: Coordinate | undefined
-    selectedCoordinate: Coordinate | undefined
+    selectionManager: SelectionManager
 
     constructor() {
         this.cells = new Map()
+        this.selectionManager = new SelectionManager()
         makeAutoObservable(this)
     }
 
@@ -61,16 +105,14 @@ class SpreadSheetStore {
         return `${COLUMNS[column]}${row}`
     }
 
-    getCellStore(coordinate: Coordinate): CellStore | undefined {
+    getCellStore(coordinate: Coordinate): CellStore {
         const key = this.coordinateToKey(coordinate)
-        return this.cells.get(key)
-    }
-
-    createCellStore(coordinate: Coordinate): CellStore {
-        const key = this.coordinateToKey(coordinate)
-        const newCellStore = new CellStore()
-        this.cells.set(key, newCellStore)
-        return newCellStore
+        let cell = this.cells.get(key)
+        if (!cell) {
+            cell = new CellStore(coordinate)
+            this.cells.set(key, cell)
+        }
+        return cell
     }
 
     deleteCellStore(coordinate: Coordinate) {
@@ -78,25 +120,20 @@ class SpreadSheetStore {
         this.cells.delete(key)
     }
 
-    setEditingCoordinate(coordinate: Coordinate | undefined) {
-        this.editingCoordinate = coordinate
-    }
-
-    setSelectedCoordinate(coordinate: Coordinate | undefined) {
-        this.selectedCoordinate = coordinate
-    }
-
     moveSelection(deltaRow: number, deltaColumn: number) {
-        if (this.selectedCoordinate) {
+        const currentCell = this.selectionManager.selectedCell
+        if (currentCell) {
             const newRow = Math.max(
                 0,
-                Math.min(MAX_ROW, this.selectedCoordinate.row + deltaRow)
+                Math.min(MAX_ROW, currentCell.coordinate.row + deltaRow)
             )
             const newColumn = Math.max(
                 0,
-                Math.min(COLUMNS.length - 1, this.selectedCoordinate.column + deltaColumn)
+                Math.min(COLUMNS.length - 1, currentCell.coordinate.column + deltaColumn)
             )
-            this.setSelectedCoordinate({ row: newRow, column: newColumn })
+            const newCoordinate = { row: newRow, column: newColumn }
+            const newCell = this.getCellStore(newCoordinate)
+            this.selectionManager.selectCell(newCell)
         }
     }
 
@@ -122,77 +159,59 @@ class SpreadSheetStore {
 // const spreadsheetStore = new SpreadSheetStore()
 const spreadsheet = generateSpreadsheetExample()
 
-const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coordinate; isEditing: boolean; isSelected: boolean }) => {
+const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     const cell = spreadsheet.getCellStore(coordinate)
-    const [originalValue, setOriginalValue] = useState(cell?.rawValue || "")
+    const [originalValue, setOriginalValue] = useState(cell.rawValue)
     const cellDivRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (isSelected && !isEditing) {
-            // if the cell is selected but not being edited, focus the cell's div
+        if (cell.isSelected && !cell.isEditing) {
             cellDivRef.current?.focus()
         }
-    }, [isSelected, isEditing])
+    }, [cell.isSelected, cell.isEditing])
 
     const handleClick = action(() => {
-        spreadsheet.setSelectedCoordinate(coordinate)
+        spreadsheet.selectionManager.selectCell(cell)
     })
 
     const handleDoubleClick = action(() => {
-        if (cell && cell.rawValue !== "") {
-            spreadsheet.setEditingCoordinate(coordinate)
-            spreadsheet.setSelectedCoordinate(coordinate)
+        if (cell.rawValue !== "") {
             setOriginalValue(cell.rawValue)
+            spreadsheet.selectionManager.editCell(cell)
         }
     })
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        let cell = spreadsheet.getCellStore(coordinate)
-        if (!cell) {
-            cell = spreadsheet.createCellStore(coordinate)
-        }
         cell.setRawValue(event.target.value)
     }
 
     const handleBlur = action(() => {
-        // remove stores for empty cells
-        let cell = spreadsheet.getCellStore(coordinate)
-        if (cell && cell.rawValue === "") {
+        if (cell.rawValue === "") {
             spreadsheet.deleteCellStore(coordinate)
         }
-        spreadsheet.setEditingCoordinate(undefined)
+        cell.setEditing(false)
     })
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
-        if (isEditing) {
+        if (cell.isEditing) {
             // edit mode
             if (event.key === 'Enter') {
                 const coordinateBelow = {
                     row: Math.min(coordinate.row + 1, MAX_ROW),
                     column: coordinate.column,
                 }
-                spreadsheet.setSelectedCoordinate(coordinateBelow)
                 const cellBelow = spreadsheet.getCellStore(coordinateBelow)
-                if (cellBelow && cellBelow.rawValue !== "") {
-                    spreadsheet.setEditingCoordinate(coordinateBelow)
-                } else {
-                    spreadsheet.setEditingCoordinate(undefined)
-                }
+                spreadsheet.selectionManager.editCell(cellBelow)
                 event.preventDefault()
             } else if (event.key === 'Escape') {
-                // revert to original value
-                let cell = spreadsheet.getCellStore(coordinate)
-                if (cell) {
-                    cell.setRawValue(originalValue)
-                    if (cell.rawValue === "") {
-                        spreadsheet.deleteCellStore(coordinate)
-                    }
+                cell.setRawValue(originalValue)
+                if (cell.rawValue === "") {
+                    spreadsheet.deleteCellStore(coordinate)
                 }
-                spreadsheet.setEditingCoordinate(undefined)
-                spreadsheet.setSelectedCoordinate(coordinate)
+                cell.setEditing(false)
                 event.preventDefault()
             }
-        } else if (isSelected) {
+        } else if (cell.isSelected) {
             // select mode
             if (event.key === 'ArrowUp') {
                 event.preventDefault()
@@ -207,36 +226,30 @@ const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coor
                 event.preventDefault()
                 spreadsheet.moveSelection(0, 1)
             } else if (event.key === 'Enter') {
-                event.preventDefault()
-                if (cell && cell.rawValue !== "") {
+                if (cell.rawValue !== "") {
                     setOriginalValue(cell.rawValue)
                 } else {
                     setOriginalValue("")
                 }
-                spreadsheet.setEditingCoordinate(coordinate)
-            } else if (event.key === 'Escape') {
+                spreadsheet.selectionManager.editCell(cell)
                 event.preventDefault()
-                spreadsheet.setSelectedCoordinate(undefined)
+            } else if (event.key === 'Escape') {
+                spreadsheet.selectionManager.clearSelection()
+                event.preventDefault()
             } else if (event.key === 'Backspace') {
                 event.preventDefault()
-                if (cell) {
-                    cell.setRawValue("")
-                    spreadsheet.deleteCellStore(coordinate)
-                }
+                cell.setRawValue("")
+                spreadsheet.deleteCellStore(coordinate)
             } else if (
                 // start editing on any printable character
                 event.key.length === 1 &&
                 !event.ctrlKey &&
                 !event.metaKey
             ) {
-                event.preventDefault()
-                spreadsheet.setEditingCoordinate(coordinate)
-                let cell = spreadsheet.getCellStore(coordinate)
-                if (!cell) {
-                    cell = spreadsheet.createCellStore(coordinate)
-                }
+                spreadsheet.selectionManager.editCell(cell)
                 cell.setRawValue(event.key)
                 setOriginalValue("")
+                event.preventDefault()
             }
         }
     }
@@ -246,8 +259,8 @@ const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coor
             onClick={handleClick}
             onDoubleClick={handleDoubleClick}
             onKeyDown={handleKeyDown}
-            tabIndex={isSelected && !isEditing ? 0 : -1}
-            ref={isSelected && !isEditing ? cellDivRef : null}
+            tabIndex={cell.isSelected && !cell.isEditing ? 0 : -1}
+            ref={cell.isSelected && !cell.isEditing ? cellDivRef : null}
             style={{
                 cursor: 'pointer',
                 width: '100%',
@@ -255,14 +268,14 @@ const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coor
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: cell?.error ? '#f1a54f' : 'white',
-                outline: isSelected ? '2px solid #2963d9' : 'none',
+                backgroundColor: cell.error ? '#f1a54f' : 'white',
+                outline: cell.isSelected ? '2px solid #2963d9' : 'none',
             }}
         >
-            {isEditing ? (
+            {cell.isEditing ? (
                 <input
                     type="text"
-                    value={cell ? cell.rawValue : ""}
+                    value={cell.rawValue}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
@@ -277,31 +290,28 @@ const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coor
                     }}
                 />
             ) : (
-                <div style={{ width: '100%', textAlign: 'center', fontSize: '1em' }}>{cell ? cell.evaluatedValue : ""}</div>
+                <div style={{ width: '100%', textAlign: 'center', fontSize: '1em' }}>
+                    {cell.evaluatedValue}
+                </div>
             )}
         </div>
     )
 })
 
 const Minibuffer = observer(() => {
-    const coordinate = spreadsheet.selectedCoordinate
+    const selectedCell = spreadsheet.selectionManager.selectedCell
     let cellLabel = "No Selection"
-    let cell: CellStore | undefined
     let inputValue = ""
 
-    if (coordinate) {
-        cell = spreadsheet.getCellStore(coordinate)
+    if (selectedCell) {
+        const coordinate = selectedCell.coordinate
         cellLabel = `Cell ${COLUMNS[coordinate.column]}${coordinate.row}:`
-        inputValue = cell ? cell.rawValue : ""
+        inputValue = selectedCell.rawValue
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (coordinate) {
-            let cell = spreadsheet.getCellStore(coordinate)
-            if (!cell) {
-                cell = spreadsheet.createCellStore(coordinate)
-            }
-            cell.setRawValue(event.target.value)
+        if (selectedCell) {
+            selectedCell.setRawValue(event.target.value)
         }
     }
 
@@ -321,7 +331,7 @@ const Minibuffer = observer(() => {
                 type="text"
                 value={inputValue}
                 onChange={handleChange}
-                disabled={!coordinate}
+                disabled={!selectedCell}
                 style={{
                     flex: 1,
                     padding: '5px',
@@ -336,9 +346,6 @@ const Minibuffer = observer(() => {
 })
 
 const Spreadsheet = observer(() => {
-    const editingCoordinate = spreadsheet.editingCoordinate
-    const selectedCoordinate = spreadsheet.selectedCoordinate
-
     return (
         <div>
             <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "490px" }}>
@@ -375,8 +382,6 @@ const Spreadsheet = observer(() => {
                                 </td>
                                 {COLUMNS.map((column, columnIndex) => {
                                     const coordinate = { row: rowIndex, column: columnIndex }
-                                    const isEditing = coordinatesEqual(editingCoordinate, coordinate)
-                                    const isSelected = coordinatesEqual(selectedCoordinate, coordinate)
                                     return (
                                         <td
                                             key={column}
@@ -384,8 +389,6 @@ const Spreadsheet = observer(() => {
                                         >
                                             <Cell
                                                 coordinate={coordinate}
-                                                isEditing={isEditing}
-                                                isSelected={isSelected}
                                             />
                                         </td>
                                     )
