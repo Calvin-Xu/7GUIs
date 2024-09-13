@@ -19,7 +19,7 @@ const flattenNumericalArgs = (args: Argument[]): number[] => {
         if (Array.isArray(arg)) {
             flattened.push(...flattenNumericalArgs(arg))
         } else {
-            const num = arg.toString() == "" ? 0 : parseFloat(arg.toString())
+            const num = arg.toString() === "" ? 0 : parseFloat(arg.toString())
             if (isNaN(num)) {
                 throw new Error(`Invalid numerical arg: '${arg}'`)
             }
@@ -112,7 +112,7 @@ const parseExpr = (tokens: string[], context: SpreadSheetStore): Expression => {
     if (token.match(/^[A-Z]+[0-9]+$/)) {
         try {
             return context.getCellStore(parseCoordinate(token))?.evaluatedValue || "" as string
-        } catch (e: any) { throw `Could not obtain value of ${token}: ` + e.message + "." }
+        } catch (e: any) { throw new Error(`Could not obtain value of ${token}: ` + e.message + ".") }
     }
 
     // handle procedure call

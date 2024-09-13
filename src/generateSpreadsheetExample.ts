@@ -1,4 +1,4 @@
-import { SpreadSheetStore, Coordinate } from "./components/guis/spreadsheet"
+import { SpreadSheetStore } from "./components/guis/spreadsheet"
 import { parseCoordinate } from "./parser/parser"
 
 export const generateSpreadsheetExample = () => {
