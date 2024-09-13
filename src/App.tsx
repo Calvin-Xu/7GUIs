@@ -78,7 +78,7 @@ const App: React.FC = observer(() => {
     <div className="App">
       <h1 style={{ textAlign: "center" }}>7GUIs with React + MobX + TypeScript</h1>
       <p style={{ textAlign: "left", padding: "0 1em" }}>My concise & accurate implementation of <a href="https://eugenkiss.github.io/7guis/">7GUIs</a> at <a href="https://github.com/Calvin-Xu/7GUIs">Calvin-Xu/7GUIs</a>; no other packages pulled</p>
-      {Object.entries(guiStore.guis).map(([name, gui]) => (
+      {Object.entries(guiStore.guis).reverse().map(([name, gui]) => (
         gui.isVisible && (
           <div key={name} className="App-row">
             <div className="App-guis">

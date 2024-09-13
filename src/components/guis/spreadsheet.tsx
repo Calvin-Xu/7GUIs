@@ -271,15 +271,13 @@ const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coor
                         width: '100%',
                         height: '100%',
                         textAlign: 'center',
-                        margin: 0,
-                        padding: 0,
                         fontSize: '1em',
                         border: 'none',
-                        borderColor: 'transparent',
+                        outline: 'none',
                     }}
                 />
             ) : (
-                <div>{cell ? cell.evaluatedValue : ""}</div>
+                <div style={{ width: '100%', textAlign: 'center', fontSize: '1em' }}>{cell ? cell.evaluatedValue : ""}</div>
             )}
         </div>
     )
