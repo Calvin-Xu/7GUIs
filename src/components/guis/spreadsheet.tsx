@@ -1,6 +1,6 @@
 import { action, makeAutoObservable } from "mobx"
 import { observer } from "mobx-react"
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { evaluate as evaluateFormula } from "../../parser/parser"
 import { generateSpreadsheetExample } from "../../generateSpreadsheetExample"
 import FlexBox from "../flexbox"
@@ -9,7 +9,7 @@ const MAX_ROW = 99
 const COLUMNS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 
 const coordinatesEqual = (a: Coordinate | undefined, b: Coordinate | undefined) =>
-    a && b && a.row === b.row && a.column === b.column
+    a?.row === b?.row && a?.column === b?.column
 
 class CellStore {
     rawValue = ""
@@ -122,12 +122,9 @@ class SpreadSheetStore {
 // const spreadsheetStore = new SpreadSheetStore()
 const spreadsheet = generateSpreadsheetExample()
 
-const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
-    let cell = spreadsheet.getCellStore(coordinate)
+const Cell = observer(({ coordinate, isEditing, isSelected }: { coordinate: Coordinate; isEditing: boolean; isSelected: boolean }) => {
+    const cell = spreadsheet.getCellStore(coordinate)
     const [originalValue, setOriginalValue] = useState(cell?.rawValue || "")
-
-    const isSelected = coordinatesEqual(spreadsheet.selectedCoordinate, coordinate)
-    const isEditing = coordinatesEqual(spreadsheet.editingCoordinate, coordinate)
     const cellDivRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -168,7 +165,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (isEditing) {
-            // editing mode
+            // edit mode
             if (event.key === 'Enter') {
                 const coordinateBelow = {
                     row: Math.min(coordinate.row + 1, MAX_ROW),
@@ -341,6 +338,9 @@ const Minibuffer = observer(() => {
 })
 
 const Spreadsheet = observer(() => {
+    const editingCoordinate = spreadsheet.editingCoordinate
+    const selectedCoordinate = spreadsheet.selectedCoordinate
+
     return (
         <div>
             <div style={{ overflow: "scroll", maxHeight: "300px", maxWidth: "490px" }}>
@@ -375,19 +375,23 @@ const Spreadsheet = observer(() => {
                                 >
                                     {rowIndex}
                                 </td>
-                                {COLUMNS.map(column => (
-                                    <td
-                                        key={column}
-                                        style={{ border: "1px solid #ccc", height: "1.5em" }}
-                                    >
-                                        <Cell
-                                            coordinate={{
-                                                row: rowIndex,
-                                                column: COLUMNS.indexOf(column),
-                                            }}
-                                        />
-                                    </td>
-                                ))}
+                                {COLUMNS.map((column, columnIndex) => {
+                                    const coordinate = { row: rowIndex, column: columnIndex }
+                                    const isEditing = coordinatesEqual(editingCoordinate, coordinate)
+                                    const isSelected = coordinatesEqual(selectedCoordinate, coordinate)
+                                    return (
+                                        <td
+                                            key={column}
+                                            style={{ border: "1px solid #ccc", height: "1.5em" }}
+                                        >
+                                            <Cell
+                                                coordinate={coordinate}
+                                                isEditing={isEditing}
+                                                isSelected={isSelected}
+                                            />
+                                        </td>
+                                    )
+                                })}
                             </tr>
                         ))}
                     </tbody>
