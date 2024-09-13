@@ -124,7 +124,7 @@ const spreadsheet = generateSpreadsheetExample()
 
 const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
     let cell = spreadsheet.getCellStore(coordinate)
-    const [tempValue, setTempValue] = useState(cell?.rawValue || "")
+    const [originalValue, setOriginalValue] = useState(cell?.rawValue || "")
 
     const isSelected = coordinatesEqual(spreadsheet.selectedCoordinate, coordinate)
     const isEditing = coordinatesEqual(spreadsheet.editingCoordinate, coordinate)
@@ -143,24 +143,25 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
 
     const handleDoubleClick = action(() => {
         if (cell && cell.rawValue !== "") {
-            setTempValue(cell.rawValue)
             spreadsheet.setEditingCoordinate(coordinate)
             spreadsheet.setSelectedCoordinate(coordinate)
+            setOriginalValue(cell.rawValue)
         }
     })
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setTempValue(event.target.value)
+        let cell = spreadsheet.getCellStore(coordinate)
+        if (!cell) {
+            cell = spreadsheet.createCellStore(coordinate)
+        }
+        cell.setRawValue(event.target.value)
     }
 
     const handleBlur = action(() => {
-        if (tempValue !== "") {
-            // only create a cell store if there's content to save
-            let cell = spreadsheet.getCellStore(coordinate)
-            if (!cell) {
-                cell = spreadsheet.createCellStore(coordinate)
-            }
-            cell.setRawValue(tempValue)
+        // remove stores for empty cells
+        let cell = spreadsheet.getCellStore(coordinate)
+        if (cell && cell.rawValue === "") {
+            spreadsheet.deleteCellStore(coordinate)
         }
         spreadsheet.setEditingCoordinate(undefined)
     })
@@ -169,13 +170,6 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
         if (isEditing) {
             // editing mode
             if (event.key === 'Enter') {
-                if (tempValue !== "") {
-                    let cell = spreadsheet.getCellStore(coordinate)
-                    if (!cell) {
-                        cell = spreadsheet.createCellStore(coordinate)
-                    }
-                    cell.setRawValue(tempValue)
-                }
                 const coordinateBelow = {
                     row: Math.min(coordinate.row + 1, MAX_ROW),
                     column: coordinate.column,
@@ -184,10 +178,19 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 const cellBelow = spreadsheet.getCellStore(coordinateBelow)
                 if (cellBelow && cellBelow.rawValue !== "") {
                     spreadsheet.setEditingCoordinate(coordinateBelow)
+                } else {
+                    spreadsheet.setEditingCoordinate(undefined)
                 }
                 event.preventDefault()
             } else if (event.key === 'Escape') {
-                setTempValue(cell ? cell.rawValue : "")
+                // revert to original value
+                let cell = spreadsheet.getCellStore(coordinate)
+                if (cell) {
+                    cell.setRawValue(originalValue)
+                    if (cell.rawValue === "") {
+                        spreadsheet.deleteCellStore(coordinate)
+                    }
+                }
                 spreadsheet.setEditingCoordinate(undefined)
                 spreadsheet.setSelectedCoordinate(coordinate)
                 event.preventDefault()
@@ -209,9 +212,9 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             } else if (event.key === 'Enter') {
                 event.preventDefault()
                 if (cell && cell.rawValue !== "") {
-                    setTempValue(cell.rawValue)
+                    setOriginalValue(cell.rawValue)
                 } else {
-                    setTempValue("")
+                    setOriginalValue("")
                 }
                 spreadsheet.setEditingCoordinate(coordinate)
             } else if (event.key === 'Escape') {
@@ -221,9 +224,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 event.preventDefault()
                 if (cell) {
                     cell.setRawValue("")
-                    if (cell.rawValue === "") {
-                        spreadsheet.deleteCellStore(coordinate)
-                    }
+                    spreadsheet.deleteCellStore(coordinate)
                 }
             } else if (
                 // start editing on any printable character
@@ -232,8 +233,13 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
                 !event.metaKey
             ) {
                 event.preventDefault()
-                setTempValue(event.key)
                 spreadsheet.setEditingCoordinate(coordinate)
+                let cell = spreadsheet.getCellStore(coordinate)
+                if (!cell) {
+                    cell = spreadsheet.createCellStore(coordinate)
+                }
+                cell.setRawValue(event.key)
+                setOriginalValue("")
             }
         }
     }
@@ -259,7 +265,7 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             {isEditing ? (
                 <input
                     type="text"
-                    value={tempValue}
+                    value={cell ? cell.rawValue : ""}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
