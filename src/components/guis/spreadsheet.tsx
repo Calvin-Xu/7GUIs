@@ -213,7 +213,29 @@ const Cell = observer(({ coordinate }: { coordinate: Coordinate }) => {
             }
         } else if (cell.isSelected) {
             // select mode
-            if (event.key === 'ArrowUp') {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+                // copy the evaluatedValue to clipboard
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(cell.evaluatedValue).catch((err) => {
+                        console.error('Failed to copy to clipboard', err)
+                    })
+                } else {
+                    console.warn('Clipboard API not available')
+                }
+                event.preventDefault()
+            } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+                // paste the clipboard content as rawValue
+                if (navigator.clipboard) {
+                    navigator.clipboard.readText().then((text) => {
+                        cell.setRawValue(text)
+                    }).catch((err) => {
+                        console.error('Failed to read from clipboard', err)
+                    })
+                } else {
+                    console.warn('Clipboard API not available')
+                }
+                event.preventDefault()
+            } else if (event.key === 'ArrowUp') {
                 event.preventDefault()
                 spreadsheet.moveSelection(-1, 0)
             } else if (event.key === 'ArrowDown') {
