@@ -1,6 +1,5 @@
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
+import React, { PropsWithChildren, useRef, useState } from 'react'
 import { observer } from 'mobx-react'
-import { makeAutoObservable } from 'mobx'
 
 interface WindowProps extends PropsWithChildren {
     title?: string,

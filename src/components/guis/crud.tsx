@@ -52,7 +52,9 @@ class CRUDStore {
             alert('Name and surname must not be empty')
             return
         }
-        this.entries.push({ id: ++this.highestId, name: this.name, surname: this.surname })
+        const newId = ++this.highestId
+        this.entries.push({ id: newId, name: this.name, surname: this.surname })
+        this.selected = newId
         this.name = ''
         this.surname = ''
     }
@@ -63,7 +65,12 @@ class CRUDStore {
         }
         const lastSelected = this.selectedIdx
         this.entries.splice(this.selectedIdx, 1)
-        this.selected = Math.max(this.entries[lastSelected]?.id || 0, this.entries[lastSelected - 1]?.id || 0)
+
+        if (this.entries.length > 0) {
+            this.selected = Math.max(this.entries[lastSelected]?.id || 0, this.entries[lastSelected - 1]?.id || 0)
+        } else {
+            this.selected = 0
+        }
     }
 
     updateEntry() {
@@ -81,7 +88,9 @@ class CRUDStore {
 
     updateFilter(filter: string) {
         this.prefixFilter = filter
-        this.selected = this.entries[0]?.id || 0
+        if (this.entries.length > 0) {
+            this.selected = this.filteredEntries[0]?.id || 0
+        }
     }
 }
 
